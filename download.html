@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pokebonk · 安装包下载</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--accent:#e0912f;--accent-2:#c65a28;--panel:rgba(28,23,18,.84);--text:#f0ebe1;--dim:#a99d8b;--line:rgba(255,236,210,.09);--radius:14px}
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{margin:0;background:#14100b;color:var(--text);font:15px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px;
+    background-image:radial-gradient(1200px 700px at 70% -10%,rgba(224,145,47,.10),transparent 60%),radial-gradient(900px 600px at 10% 110%,rgba(198,90,40,.08),transparent 55%)}
+  .card{width:100%;max-width:500px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:34px 30px 28px;text-align:center;backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 24px 70px rgba(0,0,0,.5)}
+  .ring{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(224,145,47,.16),rgba(198,90,40,.12));border:1px solid rgba(224,145,47,.35)}
+  .ring svg{width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  h1{margin:0 0 8px;font-size:19px;font-weight:700;letter-spacing:.4px}
+  .sub{margin:0 0 22px;color:var(--dim);font-size:13.5px}
+  .notice{margin:0 0 22px;padding:13px 16px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(255,236,210,.04);font-size:13px;line-height:1.9;color:var(--text);text-align:left}
+  .notice b{color:var(--accent)}
+  button{display:none;width:100%;padding:12px 34px;border:0;border-radius:24px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:14px;letter-spacing:.5px;box-shadow:0 8px 24px rgba(224,145,47,.28);cursor:pointer;font-family:inherit;transition:transform .15s ease,box-shadow .15s ease}
+  button:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(224,145,47,.36)}
+  button:disabled{opacity:.55;cursor:default;transform:none}
+  .bar{display:none;margin:0 0 10px;height:10px;border-radius:6px;background:rgba(255,236,210,.07);overflow:hidden;border:1px solid var(--line)}
+  .bar>i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .2s ease}
+  .stat{display:none;font-size:12.5px;color:var(--dim);margin:0 0 6px;font-family:ui-monospace,Consolas,monospace}
+  .stat b{color:var(--accent)}
+  .src{display:none;font-size:11.5px;color:rgba(169,157,139,.75);margin:0 0 18px;font-family:ui-monospace,Consolas,monospace}
+  .msg{display:none;margin:0 0 18px;padding:12px 15px;border-radius:var(--radius);font-size:13px;line-height:1.8;text-align:left}
+  .msg.ok{display:block;border:1px solid rgba(120,200,120,.25);background:rgba(120,200,120,.07);color:#bfe8bf}
+  .msg.err{display:block;border:1px solid rgba(224,90,60,.3);background:rgba(224,90,60,.08);color:#f0b5a4}
+  .foot{margin-top:20px;font-size:11px;color:rgba(169,157,139,.55);letter-spacing:.6px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="ring">
+    <svg viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 19h16"/></svg>
+  </div>
+  <h1>Pokebonk 安装包下载</h1>
+  <p class="sub">v1.2 · 94.1 MB · 内置全部 5679 项游戏资源 + 736 字体</p>
+  <div class="notice">
+    安装包已拆分为 <b>25 个分片</b>，存放在 <b>5 个线路</b>（本站 CDN + GitHub 双线路×4）。
+    页面会自动选择最快的线路、实时显示下载进度，全部下完后在本机合并为完整 APK 并进行
+    <b>SHA-256 完整性校验</b>，全程无需任何工具。<br>
+    建议使用 <b>Android Chrome</b>，并保持网络畅通。若中途断线，重新点击按钮会<b>续传已完成的分片</b>。
+  </div>
+  <div class="bar" id="bar"><i id="fill"></i></div>
+  <div class="stat" id="stat"></div>
+  <div class="src" id="srcl"></div>
+  <div class="msg" id="msg"></div>
+  <button id="go">开始下载并合并</button>
+  <div class="foot">POKEBONK · OFFLINE INSTALLER v1.2</div>
+</div>
+<script>
+(function(){
+"use strict";
+/* 分片清单（内联，避免额外请求） */
+var M={
+  apk:"Pokebonk-v1.2.apk",
+  total:98662325,
+  sha256:"b08b724c7ce64097db93651ed26c88998329c7c853cfdee9d0a3f91c4bcfd4eb",
+  parts:[{n:"part-00.bin",s:4000000,h:"f9d63bd7ac8406cf"},{n:"part-01.bin",s:4000000,h:"64f48bdbbd3baa57"},{n:"part-02.bin",s:4000000,h:"06cbc3fd69b90c5e"},{n:"part-03.bin",s:4000000,h:"2e1d1052847bb392"},{n:"part-04.bin",s:4000000,h:"267b4d18189592e7"},{n:"part-05.bin",s:4000000,h:"2c19a9c160a6ee7e"},{n:"part-06.bin",s:4000000,h:"1dc92b92a2e3cc2b"},{n:"part-07.bin",s:4000000,h:"ab628ad1b502bce1"},{n:"part-08.bin",s:4000000,h:"7d07bc5fc0eb9ef2"},{n:"part-09.bin",s:4000000,h:"df1665256e4f11ff"},{n:"part-10.bin",s:4000000,h:"e050ee0a207a7706"},{n:"part-11.bin",s:4000000,h:"0c7e27418694d159"},{n:"part-12.bin",s:4000000,h:"74901566390f32bb"},{n:"part-13.bin",s:4000000,h:"d53388cce9907298"},{n:"part-14.bin",s:4000000,h:"5cd4343c9a6adbff"},{n:"part-15.bin",s:4000000,h:"bee7aa6caf0fc8f5"},{n:"part-16.bin",s:4000000,h:"bec4a8b9aa69894f"},{n:"part-17.bin",s:4000000,h:"1666538530bb5995"},{n:"part-18.bin",s:4000000,h:"915c20729d6d75d8"},{n:"part-19.bin",s:4000000,h:"41ca70e22c9a3389"},{n:"part-20.bin",s:4000000,h:"e17b62c0571f66e9"},{n:"part-21.bin",s:4000000,h:"781a1ffa0b32f8f3"},{n:"part-22.bin",s:4000000,h:"94f89e584b9a435d"},{n:"part-23.bin",s:4000000,h:"41a3db3899d08bc7"},{n:"part-24.bin",s:2662325,h:"9ae9cacb8fdc94d0"}]};
+
+/* 线路池: [名字, 前缀]。rth1=游戏站CDN(国内直连,可能308回源); jsdelivr 系列=GitHub 双线路 */
+var SRC=[
+  ["github-jsd","https://cdn.jsdelivr.net/gh/LXgssy/pokebonk-apk@main/"],
+  ["fastly-jsd","https://fastly.jsdelivr.net/gh/LXgssy/pokebonk-apk@main/"],
+  ["gcore-jsd","https://gcore.jsdelivr.net/gh/LXgssy/pokebonk-apk@main/"],
+  ["testingcf-jsd","https://testingcf.jsdelivr.net/gh/LXgssy/pokebonk-apk@main/"],
+  ["rth1-cdn","https://webos-cdn7.rth1.xyz/apk/"]
+];
+/* 源顺序自适应: 成功的源会被移到队首 */
+var order=SRC.map(function(_,i){return i});
+
+var $=function(id){return document.getElementById(id)};
+var go=$("go"),bar=$("bar"),fill=$("fill"),stat=$("stat"),srcl=$("srcl"),msg=$("msg");
+go.style.display="inline-block";
+
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function sha16(buf){
+  return crypto.subtle.digest("SHA-256",buf).then(function(d){
+    var a=new Uint8Array(d),s="";
+    for(var i=0;i<8;i++){ s+=(a[i]>>4).toString(16)+((a[i]&15).toString(16)); }
+    return s;
+  });
+}
+function fmtMB(b){return (b/1048576).toFixed(1)+" MB"}
+
+/* 全局进度 */
+var got=0, bytes=0, curSrc="", curPart="", t0=0, doneBits=new Array(M.parts.length);
+function paint(){
+  var pct=bytes/M.total*100;
+  fill.style.width=Math.min(pct,100).toFixed(1)+"%";
+  var el=(Date.now()-t0)/1000;
+  var spd=el>0.5?fmtMB(bytes/el)+"/s":"…";
+  stat.innerHTML="分片 <b>"+got+"</b> / "+M.parts.length+" ｜ <b>"+fmtMB(bytes)+"</b> / "+fmtMB(M.total)+"（"+pct.toFixed(1)+"%） "+spd;
+  srcl.textContent="当前线路: "+curSrc+"  ·  分片: "+curPart;
+}
+
+/* 带超时的流式下载: ttfb 连接超时 / idle 读取停滞超时; onChunk 实时回调 */
+async function fetchStream(url,ttfbMs,idleMs,onChunk,sizeUnknown){
+  var ctl=new AbortController();
+  var timer=null, aborted=null;
+  function arm(ms,label){
+    clearTimeout(timer);
+    timer=setTimeout(function(){ aborted=label; ctl.abort(); },ms);
+  }
+  arm(ttfbMs,"连接超时");
+  try{
+    var r=await fetch(url,{cache:"no-store",signal:ctl.signal});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    if(!r.body) { var ab=await r.arrayBuffer(); onChunk(new Uint8Array(ab),true); return; }
+    var reader=r.body.getReader(), total=sizeUnknown?0:undefined;
+    while(true){
+      arm(idleMs,"读取停滞");
+      var res=await reader.read();
+      if(res.done) break;
+      onChunk(res.value,false);
+    }
+    clearTimeout(timer);
+    return;
+  }catch(e){
+    clearTimeout(timer);
+    if(aborted) throw new Error(aborted);
+    throw e;
+  }
+}
+
+/* 下载一个分片: 依次尝试各线路; 成功的线路提到队首 */
+async function fetchPart(p,onBytes,onDone){
+  var lastErr=null;
+  for(var round=0;round<2;round++){
+    for(var oi=0;oi<order.length;oi++){
+      var si=order[oi], src=SRC[si], url=src[1]+p.n;
+      curSrc=src[0]; curPart=p.n.replace("part-","").replace(".bin","");
+      try{
+        var chunks=[],recvd=0;
+        await fetchStream(url,14000,30000,function(u8,final){
+          chunks.push(u8); recvd+=u8.length;
+          onBytes(u8.length);
+        },false);
+        var buf=concat(chunks,recvd);
+        if(buf.length!==p.s) throw new Error("分片大小异常 "+buf.length);
+        var h=await sha16(buf);
+        if(h!==p.h) throw new Error("分片校验不符");
+        onDone(buf);
+        /* 学习: 该线路提到队首 */
+        if(oi>0){ order.splice(oi,1); order.unshift(si); }
+        return;
+      }catch(e){
+        lastErr=e;
+        paint();
+        await sleep(400);
+      }
+    }
+  }
+  throw new Error(p.n+" 全部线路失败: "+(lastErr&&lastErr.message||""));
+}
+function concat(chunks,len){
+  var out=new Uint8Array(len),off=0;
+  for(var i=0;i<chunks.length;i++){ out.set(chunks[i],off); off+=chunks[i].length; }
+  return out;
+}
+
+async function run(){
+  go.disabled=true;
+  msg.className="msg"; msg.style.display="none";
+  bar.style.display="block"; stat.style.display="block"; srcl.style.display="block";
+  var N=M.parts.length, blobs=new Array(N);
+  /* 续传: 恢复上一轮已完成的分片 */
+  if(!run.blobs){ run.blobs=blobs; }
+  blobs=run.blobs;
+  got=0; bytes=0;
+  for(var i=0;i<N;i++){ if(blobs[i]){ got++; bytes+=M.parts[i].s; doneBits[i]=true; } else doneBits[i]=false; }
+  t0=Date.now();
+  paint();
+  var next=0;
+  async function worker(){
+    while(next<N){
+      var i=next++;
+      if(blobs[i]) continue; /* 已完成, 跳过(续传) */
+      var p=M.parts[i];
+      await fetchPart(p,
+        function(n){ bytes+=n; paint(); },
+        function(buf){
+          if(!blobs[i]){ blobs[i]=new Blob([buf]); got++; }
+          buf=null; paint();
+        });
+    }
+  }
+  try{
+    await Promise.all([worker(),worker(),worker()]);
+    if(got!==N) throw new Error("分片不齐");
+    stat.innerHTML="合并中…"; srcl.textContent="";
+    var big=new Blob(blobs); run.blobs=null;
+    if(big.size!==M.total) throw new Error("合并后大小异常: "+big.size);
+    stat.innerHTML="SHA-256 校验中…";
+    var fullOk=true;
+    try{
+      var ab=await big.arrayBuffer();
+      var d=await crypto.subtle.digest("SHA-256",ab); ab=null;
+      var a=new Uint8Array(d),hs="";
+      for(var k=0;k<a.length;k++){hs+=(a[k]>>4).toString(16)+(a[k]&15).toString(16);}
+      if(hs!==M.sha256) throw new Error("BADSUM");
+    }catch(e){
+      if(String(e.message||e)==="BADSUM") throw new Error("整体校验不符（下载损坏），请重试");
+      fullOk=false; /* 低端机内存不足时降级: 仅保留逐片校验 + 总大小校验 */
+    }
+    var url=URL.createObjectURL(big);
+    var a2=document.createElement("a");
+    a2.href=url; a2.download=M.apk;
+    document.body.appendChild(a2); a2.click();
+    setTimeout(function(){URL.revokeObjectURL(url)},60000);
+    msg.className="msg ok";
+    msg.innerHTML="<b>✔ 完成！</b>已开始保存 <b>"+M.apk+"</b>（"+fmtMB(M.total)+"，"+
+      (fullOk?"整包 SHA-256 校验通过":"25/25 分片校验通过, 整包校验因内存不足已跳过")+"）。<br>"+
+      "安装提示：打开下载的 APK，若系统提示“未知来源”，请允许该来源安装；"+
+      "若已安装过旧版且签名不同，请先卸载旧版再安装。";
+  }catch(e){
+    msg.className="msg err";
+    msg.innerHTML="<b>下载中断：</b>"+String(e.message||e)+"<br>点击按钮可续传（已完成的分片不会重新下载）。";
+  }
+  go.disabled=false; go.textContent="继续/重新下载";
+}
+go.addEventListener("click",run);
+if(!window.crypto||!crypto.subtle){
+  msg.className="msg err";
+  msg.innerHTML="<b>浏览器不支持 SHA-256 校验。</b>请改用 Android Chrome 或其他现代浏览器。";
+  go.disabled=true;
+}
+})();
+</script>
+</body>
+</html>
